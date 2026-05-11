@@ -29,11 +29,10 @@ CREATE TABLE IF NOT EXISTS tasks (
         ON DELETE CASCADE
 );
 
--- Données de test --
--- Mot de passe : "test1234" hashé avec password_hash() PHP --
+-- Insertion des données de test --
 INSERT INTO users (mail, password, nom) VALUES
-('test@user.fr', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Utilisateur Test');
+('test@test.test', '$2y$10$SbZhLXk3fqpq8yQZORITx.GNMSKaOPF8rqQ1edvjarbZ4t2R6clqq', 'Utilisateur Test');
 
 INSERT INTO tasks (id_user, titre, description, date_echeance, priorite, statut) VALUES
-(1, 'Tâche de démonstration', 'Une tâche pour tester l'affichage', '2025-12-31', 'normale', 'à faire'),
-(1, 'Tâche en retard', 'Cette tâche est dépassée', '2024-01-01', 'haute', 'en cours');
+(1, 'Tâche de démonstration', 'Une tâche pour test affichage normal', '2025-12-31', 'normale', 'à faire'),
+(1, 'Tâche en retard', 'Cette tâche est en retard', '2024-01-01', 'haute', 'en cours');
