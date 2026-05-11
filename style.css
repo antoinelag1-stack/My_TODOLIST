@@ -1,0 +1,260 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@200;300;400;600;700&display=swap');
+
+/* ─── Reset ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Base ─── */
+body {
+    min-height: 100vh;
+    font-family: 'Exo 2', sans-serif;
+    font-weight: 400;
+    color: #ddeeff;
+    overflow-x: hidden;
+    background-image: url('/my_todolist/images/background_default.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-color: #03050e;
+}
+
+/* Voile sombre sur le fond */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 4, 15, 0.6);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ─── Coins décoratifs de page ─── */
+.corner-mark {
+    position: fixed;
+    width: 16px;
+    height: 16px;
+    border-color: rgba(96,144,221,0.2);
+    border-style: solid;
+    z-index: 10;
+    pointer-events: none;
+}
+.cm-tl { top: 16px;    left: 16px;  border-width: 1px 0 0 1px; }
+.cm-tr { top: 16px;    right: 16px; border-width: 1px 1px 0 0; }
+.cm-bl { bottom: 16px; left: 16px;  border-width: 0 0 1px 1px; }
+.cm-br { bottom: 16px; right: 16px; border-width: 0 1px 1px 0; }
+
+.accueil-content {
+    position: relative;
+    z-index: 1;
+    max-width: 500px;
+    width: 100%;
+    padding: 2rem;
+}
+
+/* ─── Page d'accueil ─── */
+.page-accueil {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ─── Menu ─── */
+.hud-menu {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(1, 3, 12, 0.88);
+    backdrop-filter: blur(6px);
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hud-menu::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, #6090dd, transparent);
+}
+
+.menu-logo {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #ddeeff;
+    text-decoration: none;
+}
+.menu-logo em { font-style: normal; color: #6090dd; }
+
+.menu-right {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.menu-sep {
+    width: 1px;
+    height: 16px;
+    background: rgba(96,144,221,0.15);
+}
+
+.menu-user {
+    font-size: 0.65rem;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: #4a6a9a;
+    text-transform: uppercase;
+}
+
+/* ─── Pages protégées (avec menu) ─── */
+.page-app {
+    padding-top: 4rem;
+}
+
+.page-app main {
+    position: relative;
+    z-index: 1;
+    padding: 2rem;
+}
+
+/* ─── Boîte HUD ─── */
+.hud-box {
+    background: rgba(1, 3, 12, 0.82);
+    padding: 2rem 2.2rem;
+    position: relative;
+    backdrop-filter: blur(4px);
+}
+
+/* Coins HUD intérieurs */
+.hud-corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: rgba(96,144,221,0.4);
+    border-style: solid;
+}
+.hc-tl { top: 6px;    left: 6px;  border-width: 1px 0 0 1px; }
+.hc-tr { top: 6px;    right: 6px; border-width: 1px 1px 0 0; }
+.hc-bl { bottom: 6px; left: 6px;  border-width: 0 0 1px 1px; }
+.hc-br { bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }
+
+/* ─── Typographie ─── */
+.eyerow {
+    font-size: 0.58rem;
+    font-weight: 300;
+    letter-spacing: 0.45em;
+    color: #6090dd;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #ddeeff;
+    letter-spacing: 0.03em;
+    line-height: 1;
+}
+h1 em { font-style: normal; color: #6090dd; }
+
+.title-rule {
+    width: 48px;
+    height: 1px;
+    background: #6090dd;
+    opacity: 0.5;
+    margin: 1rem 0;
+}
+
+.sub {
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: #4a6a9a;
+    letter-spacing: 0.08em;
+    line-height: 1.7;
+    margin-bottom: 2.2rem;
+    max-width: 360px;
+}
+
+/* ─── Boutons ─── */
+.btns {
+    display: flex;
+    gap: 1.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.7rem 1.8rem;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 1px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: rgba(26, 58, 122, 0.9);
+    color: #ddeeff;
+    border: 1px solid #3a6acc;
+}
+.btn-primary:hover {
+    background: rgba(36, 61, 128, 1);
+    border-color: #6090dd;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #3a5a9a;
+    border: none;
+    border-bottom: 1px solid #1a2a4a;
+    border-radius: 0;
+    padding-left: 0;
+    padding-right: 0;
+    letter-spacing: 0.15em;
+}
+.btn-secondary:hover {
+    color: #6090dd;
+    border-bottom-color: #6090dd;
+}
+
+/* ─── Inputs ─── */
+.form-input {
+    width: 100%;
+    background-color: rgb(1, 5, 20);
+    border: 1px solid #ddeeff;
+    color: #ddeeff;
+    font-size: 0.78rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    padding: 0.65rem 0.9rem;
+    border-radius: 1px;
+    outline: none;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.form-input::placeholder {
+    color: rgba(96, 144, 221, 0.3);
+}
+
+.form-input:-webkit-autofill,
+.form-input:-webkit-autofill:hover,
+.form-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px rgb(1, 5, 20) inset;
+    -webkit-text-fill-color: #ddeeff;
+    caret-color: #ddeeff;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 480px) {
+    h1 { font-size: 2rem; }
+    .btns { flex-direction: column; align-items: flex-start; }
+}

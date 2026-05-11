@@ -1,0 +1,2 @@
+/* Pour la sécurité, qu'on ne puisse pas accéder à ce dossier juste en saisissant le path exact */
+Deny from all
