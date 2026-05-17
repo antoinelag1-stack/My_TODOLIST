@@ -67,7 +67,7 @@ function get_taches() {
         $params[] = $statut;
     }
 
-    if ($priorite !== null) {
+    if (!empty($priorite)) {
         $sql     .= ' AND priorite = ?';
         $params[] = $priorite;
     }
@@ -76,9 +76,16 @@ function get_taches() {
     // mais uniquement après la whitelist ci-dessus, donc sans risque d'injection
     $sql .= " ORDER BY $tri $ordre LIMIT $limite OFFSET $offset";
 
-    $req = $pdo->prepare($sql);
-    $req->execute($params);
-    $taches = $req->fetchAll();
+    try {
+        $req = $pdo->prepare($sql);
+        $req->execute($params);
+        $taches = $req->fetchAll();
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['erreur' => 'Erreur serveur']);
+        exit;
+    }
 
     http_response_code(200);
     echo json_encode($taches);
@@ -105,14 +112,21 @@ function creer_tache() {
             VALUES (?, ?, ?, ?, ?, ?)';
     $params = [$id_user, $titre, $description, $date_echeance, $priorite, $statut];
 
-    $req = $pdo->prepare($sql);
-    $req->execute($params);
+    try {
+        $req = $pdo->prepare($sql);
+        $req->execute($params);
 
-    // On récupère la tâche créé pour l'afficher
-    $id_nouv = $pdo->lastInsertId();
-    $req2    = $pdo->prepare('SELECT * FROM tasks WHERE id = ?');
-    $req2->execute([$id_nouv]);
-    $nouv_tache = $req2->fetch();
+        // On récupère la tâche créé pour l'afficher
+        $id_nouv = $pdo->lastInsertId();
+        $req2    = $pdo->prepare('SELECT * FROM tasks WHERE id = ?');
+        $req2->execute([$id_nouv]);
+        $nouv_tache = $req2->fetch();
+    
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['erreur' => 'Erreur serveur']);
+        exit;
+    }
 
     http_response_code(201); // Code de réussite de creation
     echo json_encode($nouv_tache);
@@ -177,14 +191,22 @@ function modifier_tache() {
     $params[] = $id_tache;
 
     // implode sépare les champs avec une virgule : idéal pour la requête
-    $sql = 'UPDATE tasks SET ' . implode(', ', $champs) . ' WHERE id = ?'; 
-    $req = $pdo->prepare($sql);
-    $req->execute($params);
+    $sql = 'UPDATE tasks SET ' . implode(', ', $champs) . ' WHERE id = ?';
 
-    // On retourne la tâche modifiée
-    $req2 = $pdo->prepare('SELECT * FROM tasks WHERE id = ?');
-    $req2->execute([$id_tache]);
-    $tache_modif = $req2->fetch();
+    try {
+        $req = $pdo->prepare($sql);
+        $req->execute($params);
+
+        // On retourne la tâche modifiée
+        $req2 = $pdo->prepare('SELECT * FROM tasks WHERE id = ?');
+        $req2->execute([$id_tache]);
+        $tache_modif = $req2->fetch();
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['erreur' => 'Erreur serveur']);
+        exit;
+    }
 
     http_response_code(200); // Code de réussite
     echo json_encode($tache_modif);
@@ -222,13 +244,20 @@ function changer_statut() {
 
     // Requête de modification du statut en base
     $sql = 'UPDATE tasks SET statut = ? WHERE id = ?'; 
-    $req = $pdo->prepare($sql);
-    $req->execute([$statut, $id_tache]);
 
-    // On retourne la tâche modifiée
-    $req2 = $pdo->prepare('SELECT * FROM tasks WHERE id = ?');
-    $req2->execute([$id_tache]);
-    $tache_modif_statut = $req2->fetch();
+    try {
+        $req = $pdo->prepare($sql);
+        $req->execute([$statut, $id_tache]);
+
+        // On retourne la tâche modifiée
+        $req2 = $pdo->prepare('SELECT * FROM tasks WHERE id = ?');
+        $req2->execute([$id_tache]);
+        $tache_modif_statut = $req2->fetch();
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['erreur' => 'Erreur serveur']);
+            exit;
+        }
 
     http_response_code(200);
     echo json_encode($tache_modif_statut);
@@ -259,8 +288,16 @@ function supprimer_tache() {
 
     // Requête de suppression en base
     $sql = 'DELETE FROM tasks WHERE id = ?'; 
-    $req = $pdo->prepare($sql);
-    $req->execute([$id_tache]);
+
+    try {
+        $req = $pdo->prepare($sql);
+        $req->execute([$id_tache]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['erreur' => 'Erreur serveur']);
+        exit;
+    }
 
     http_response_code(200);
     echo json_encode(['succes' => 'Tâche supprimée']);
