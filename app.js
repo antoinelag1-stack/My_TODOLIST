@@ -1,15 +1,9 @@
-// ═══════════════════════════════════════════
-// CONFIGURATION
-// ═══════════════════════════════════════════
-
+// Configuration du path absolu vers l'api.php pour éviter fautes de frappe car répétition
 const API_URL = '/my_todolist/api.php';
 
-// ═══════════════════════════════════════════
-// ÉTAT DE L'APPLICATION
-// Ces variables gardent en mémoire les filtres
-// actifs et la page courante
-// ═══════════════════════════════════════════
 
+// Etat de l'app
+// Ces variables gardent en mémoire les filtres actifs et la page courante
 let etat = {
     priorite : '',
     tri      : 'date_creation',
@@ -18,23 +12,19 @@ let etat = {
     page     : 1
 };
 
-// ═══════════════════════════════════════════
-// INITIALISATION — exécuté au chargement
-// ═══════════════════════════════════════════
 
+// Initialisation : exécuté au chargement
 document.addEventListener('DOMContentLoaded', () => {
     chargerTaches();
     ecouterFiltres();
     ecouterBoutons();
 });
 
-// ═══════════════════════════════════════════
-// CHARGER ET AFFICHER LES TÂCHES
-// ═══════════════════════════════════════════
 
+// Charger et afficher les tâches
 async function chargerTaches() {
 
-    // On construit l'URL avec les paramètres de l'état actuel
+    // On construit l'URL avec les paramètres actuels de l'état de l'app sous forme 'etat.paramètre'
     const params = new URLSearchParams({
         action   : 'liste',
         priorite : etat.priorite,
@@ -45,7 +35,7 @@ async function chargerTaches() {
     });
 
     try {
-        const reponse = await fetch(`${API_URL}?${params}`);
+        const reponse = await fetch(`${API_URL}?${params}`); //
 
         if (!reponse.ok) {
             throw new Error('Erreur serveur : ' + reponse.status);
@@ -59,10 +49,8 @@ async function chargerTaches() {
     }
 }
 
-// ═══════════════════════════════════════════
-// AFFICHER LES TÂCHES DANS LES COLONNES
-// ═══════════════════════════════════════════
 
+// Afficher les 'taches' chargées juste au-dessus dans les colonnes
 function afficherTaches(taches) {
 
     // On vide les 3 colonnes avant de les remplir
@@ -75,10 +63,10 @@ function afficherTaches(taches) {
     // Compteurs pour les headers de colonnes
     const compteurs = { 'à faire': 0, 'en cours': 0, 'terminée': 0 };
 
-    // On vide chaque colonne
+    // On vide chaque colonne de son contenu
     Object.values(colonnes).forEach(col => col.innerHTML = '');
 
-    // On dispatche chaque tâche dans la bonne colonne
+    // On distribue chaque tâche dans la bonne colonne
     taches.forEach(tache => {
         const statut = tache.statut.toLowerCase();
         if (colonnes[statut]) {
@@ -93,32 +81,30 @@ function afficherTaches(taches) {
     document.getElementById('count-terminee').textContent = compteurs['terminée'];
 }
 
-// ═══════════════════════════════════════════
-// CRÉER UNE CARD HTML pour une tâche
-// ═══════════════════════════════════════════
 
+// Créer une card HTML pour une tâche en paramètre
 function creerCard(tache) {
 
     // On vérifie si la date d'échéance est dépassée
     const aujourd_hui  = new Date();
-    aujourd_hui.setHours(0, 0, 0, 0);
+          aujourd_hui.setHours(0, 0, 0, 0);
     const date_echeance = new Date(tache.date_echeance);
     const en_retard     = date_echeance < aujourd_hui;
 
-    // On choisit la classe CSS selon la priorité
+    // On choisit la classe CSS selon la priorité pour l'affichage dans la card
     const classePrio = {
         'haute'   : 'prio-haute',
         'normale' : 'prio-normale',
         'basse'   : 'prio-basse'
     }[tache.priorite] || 'prio-normale';
 
-    // On formate la date en français
+    // On formate la date en français pour normaliser 
     const date_formatee = date_echeance.toLocaleDateString('fr-FR');
 
-    // On crée l'élément div de la card
+    // On crée l'élément HTML div de la card
     const card = document.createElement('div');
     card.className = 'card';
-    card.dataset.id = tache.id; // On stocke l'id dans un attribut data
+    card.dataset.id = tache.id; // On stocke l'id de la div dans un attribut data
 
     // On construit le HTML intérieur de la card
     card.innerHTML = `
@@ -126,7 +112,7 @@ function creerCard(tache) {
             <span class="card-titre">${htmlEchapper(tache.titre)}</span>
             <span class="prio ${classePrio}">${htmlEchapper(tache.priorite)}</span>
         </div>
-        ${tache.description
+        ${tache.description //Si présente, sinon on met ''
             ? `<p class="card-desc">${htmlEchapper(tache.description)}</p>`
             : ''}
         <div class="card-date ${en_retard ? 'retard' : ''}">
@@ -146,39 +132,32 @@ function creerCard(tache) {
     return card;
 }
 
-// ═══════════════════════════════════════════
-// SÉCURITÉ — équivalent JS de htmlspecialchars()
-// Empêche l'injection de HTML dans les cards
-// ═══════════════════════════════════════════
 
+// SÉCURITÉ : on créé htmlEchapper() pour un équivalent JS de htmlspecialchars()
+// pour empêcher l'injection de HTML dans les cards
 function htmlEchapper(str) {
     const div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
 }
 
-// ═══════════════════════════════════════════
-// NOTIFICATIONS VISUELLES
-// ═══════════════════════════════════════════
 
+// Notifications visuelles succès/echec
 function afficherNotif(message, type = 'erreur') {
     const notif = document.getElementById('notif');
     notif.textContent  = message;
     notif.className    = `notif notif-${type}`;
     notif.style.display = 'block';
 
-    // Disparaît automatiquement après 4 secondes
+    // Disparaît automatiquement après 5 secondes
     setTimeout(() => {
         notif.style.display = 'none';
-    }, 4000);
+    }, 5000);
 }
 
-// ═══════════════════════════════════════════
-// ÉCOUTER LES FILTRES
-// Détecte les changements sur les selects
-// de la barre de filtres et relance le chargement
-// ═══════════════════════════════════════════
 
+// Ecouter les filtres saisis
+// Détecte les changements sur les selects de la barre de filtres et relance le chargement
 function ecouterFiltres() {
 
     document.getElementById('filtre-priorite').addEventListener('change', (e) => {
@@ -198,14 +177,17 @@ function ecouterFiltres() {
         etat.page = 1;
         chargerTaches();
     });
+
+    document.getElementById('filtre-ordre').addEventListener('change', (e) => {
+    etat.ordre = e.target.value;
+    etat.page  = 1;
+    chargerTaches();
+});
 }
 
-// ═══════════════════════════════════════════
-// ÉCOUTER LES BOUTONS
-// Gère tous les clics de la page via
-// la délégation d'événements
-// ═══════════════════════════════════════════
 
+// Ecouter les filtes
+// Gère tous les clics de la page en appellant les fonctions créées
 function ecouterBoutons() {
 
     // Bouton "Nouvelle tâche"
@@ -226,9 +208,8 @@ function ecouterBoutons() {
     });
 
     // Délégation d'événements sur le kanban entier
-    // On écoute les clics sur le kanban plutôt que sur chaque bouton
-    // car les cards sont créées dynamiquement par le JS —
-    // elles n'existent pas encore au chargement de la page
+    // On écoute les clics sur le kanban plutôt que sur chaque bouton grâce aux fonctions créés juste après
+    // car les cards sont créées dynamiquement par le JS, elles n'existent pas encore au chargement de la page
     document.getElementById('cards-afaire').addEventListener('click',  gererClicCard);
     document.getElementById('cards-encours').addEventListener('click', gererClicCard);
     document.getElementById('cards-terminee').addEventListener('click', gererClicCard);
@@ -245,11 +226,9 @@ function ecouterBoutons() {
     });
 }
 
-// ═══════════════════════════════════════════
-// GÉRER LES CLICS SUR LES CARDS
-// Détecte si c'est "Modifier" ou "Supprimer"
-// ═══════════════════════════════════════════
 
+// Gérer les clics sur les cards
+// Détecte si c'est "Modifier" ou "Supprimer"
 function gererClicCard(e) {
     const btn = e.target.closest('.card-btn');
     if (!btn) return; // Clic ailleurs sur la card, on ignore
@@ -265,11 +244,9 @@ function gererClicCard(e) {
     }
 }
 
-// ═══════════════════════════════════════════
-// GÉRER LE CHANGEMENT DE STATUT
-// Déclenché quand on change le select d'une card
-// ═══════════════════════════════════════════
 
+// Gérer le changement de statut
+// Déclenché quand on change le select d'une card
 function gererChangeStatut(e) {
     const select = e.target.closest('.card-select');
     if (!select) return;
@@ -280,10 +257,8 @@ function gererChangeStatut(e) {
     changerStatut(id, statut);
 }
 
-// ═══════════════════════════════════════════
-// MODALE — OUVERTURE ET FERMETURE
-// ═══════════════════════════════════════════
 
+// Modale : Ouverture et fermeture
 function ouvrirModaleCreation() {
 
     // On remet le formulaire à zéro
@@ -299,7 +274,6 @@ function ouvrirModaleCreation() {
 }
 
 async function ouvrirModaleModification(id) {
-
     // On récupère les données actuelles de la tâche depuis l'API
     const params = new URLSearchParams({ action: 'liste' });
     const reponse = await fetch(`${API_URL}?${params}`);
@@ -328,11 +302,9 @@ function fermerModale() {
     document.getElementById('form-tache').reset();
 }
 
-// ═══════════════════════════════════════════
-// SOUMETTRE LE FORMULAIRE
-// Création ou modification selon si tache-id est rempli
-// ═══════════════════════════════════════════
 
+// Soumettre le formulaire
+// Création ou modification selon si tache-id est rempli
 async function soumettreFormulaire() {
 
     const id = document.getElementById('tache-id').value;
@@ -344,10 +316,8 @@ async function soumettreFormulaire() {
     }
 }
 
-// ═══════════════════════════════════════════
-// CRÉER UNE TÂCHE
-// ═══════════════════════════════════════════
 
+// Créer une tâche
 async function creerTache() {
 
     // On récupère les valeurs du formulaire
@@ -378,10 +348,8 @@ async function creerTache() {
     }
 }
 
-// ═══════════════════════════════════════════
-// MODIFIER UNE TÂCHE
-// ═══════════════════════════════════════════
 
+// Modifier une tâche
 async function modifierTache(id) {
 
     // PUT envoie les données en JSON dans le corps de la requête
@@ -415,10 +383,8 @@ async function modifierTache(id) {
     }
 }
 
-// ═══════════════════════════════════════════
-// CHANGER LE STATUT D'UNE TÂCHE
-// ═══════════════════════════════════════════
 
+// Changer le statut d'une tâche
 async function changerStatut(id, statut) {
 
     try {
@@ -441,10 +407,8 @@ async function changerStatut(id, statut) {
     }
 }
 
-// ═══════════════════════════════════════════
-// SUPPRIMER UNE TÂCHE
-// ═══════════════════════════════════════════
 
+// Supprimer une tâche
 async function supprimerTache(id) {
 
     // On demande confirmation avant de supprimer

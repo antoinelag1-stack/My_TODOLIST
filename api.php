@@ -40,14 +40,14 @@ function get_taches() {
 
     $id_user = $_SESSION['user_id'];
 
-    // Récupération des filtres envoyés par le JS (optionnels)
-    $statut   = $_GET['statut']   ?? null; // 'à faire', 'en cours', 'terminée', ou null = toutes
-    $priorite = $_GET['priorite'] ?? null; // 'basse', 'normale', 'haute', ou null = toutes
-    $tri      = $_GET['tri']      ?? 'date_creation'; // colonne sur laquelle trier
+    // Récupération des filtres envoyés par le JS
+    $statut   = $_GET['statut']   ?? null; // 'à faire', 'en cours', 'terminée', vide ou null = toutes
+    $priorite = $_GET['priorite'] ?? null; // 'basse', 'normale', 'haute', vide ou null = toutes
+    $tri      = $_GET['tri']      ?? 'date_echeance';
     $ordre    = $_GET['ordre']    ?? 'DESC'; // ASC ou DESC
 
     // Pagination
-    $limite = (int)($_GET['limite'] ?? 10);  // nombre de tâches par page
+    $limite = (int)($_GET['limite'] ?? 10);  // nombre de tâches par page choisi, par défaut sera 10
     $page   = (int)($_GET['page']   ?? 1);   // page demandée
     $offset = ($page - 1) * $limite;         // calcul de l'offset SQL
 
@@ -58,12 +58,12 @@ function get_taches() {
     if (!in_array($tri, $tris_autorises))     $tri    = 'date_creation';
     if (!in_array($ordre, $ordres_autorises)) $ordre  = 'DESC';
 
-    // Construction dynamique de la requête selon les filtres actifs
+    // Construction dynamique de la requête '$sql' selon les filtres actifs
     $sql    = 'SELECT * FROM tasks WHERE id_user = ?';
     $params = [$id_user];
 
-    if ($statut !== null) {
-        $sql     .= ' AND statut = ?';
+    if (!empty($statut)) {
+        $sql     .= ' AND statut = ?'; 
         $params[] = $statut;
     }
 
@@ -72,7 +72,7 @@ function get_taches() {
         $params[] = $priorite;
     }
 
-    // ORDER BY et LIMIT ne peuvent pas être des paramètres PDO — on les concatène
+    // ORDER BY et LIMIT ne peuvent pas être des paramètres PDO - on les concatène 
     // mais uniquement après la whitelist ci-dessus, donc sans risque d'injection
     $sql .= " ORDER BY $tri $ordre LIMIT $limite OFFSET $offset";
 
@@ -81,19 +81,20 @@ function get_taches() {
         $req->execute($params);
         $taches = $req->fetchAll();
 
-    } catch (PDOException $e) {
+    } catch (PDOException $e) {         // Comme tous les PDO du code, on les entoure d'un try/catch avec gestion d'erreur
         http_response_code(500);
         echo json_encode(['erreur' => 'Erreur serveur']);
         exit;
     }
 
-    http_response_code(200);
-    echo json_encode($taches);
+    http_response_code(200); // Code de réussite
+    echo json_encode($taches);  // Sortie en json de la variable
 }
 
 function creer_tache() {
     global $pdo;
 
+    // On récupère les valeurs du formulaire dans des variables
     $id_user        = $_SESSION['user_id'];
     $titre          = $_POST['titre']         ?? null;
     $description    = $_POST['description']   ?? null;
@@ -101,26 +102,27 @@ function creer_tache() {
     $priorite       = $_POST['priorite']      ?? 'normale';
     $statut         = $_POST['statut']        ?? 'à faire';
 
-    // Validation des champs obligatoires titre et date_echeance
+    // Vérification des champs obligatoires titre et date_echeance
     if (empty($titre) || empty($date_echeance)) {
         http_response_code(400);
         echo json_encode(['erreur' => 'Le titre et la date d\'échéance sont obligatoires']);
         exit;
     }
 
+    // Requête d'insertion en base
     $sql = 'INSERT INTO tasks (id_user, titre, description, date_echeance, priorite, statut)
             VALUES (?, ?, ?, ?, ?, ?)';
     $params = [$id_user, $titre, $description, $date_echeance, $priorite, $statut];
 
-    try {
+    try {          // Comme toutes les PDO du code, on les entoure d'un try/catch et gestion d'erreur
         $req = $pdo->prepare($sql);
         $req->execute($params);
 
         // On récupère la tâche créé pour l'afficher
-        $id_nouv = $pdo->lastInsertId();
+        $id_nouv = $pdo->lastInsertId(); // fonction qui récupère l'id de la dernière insertion
         $req2    = $pdo->prepare('SELECT * FROM tasks WHERE id = ?');
         $req2->execute([$id_nouv]);
-        $nouv_tache = $req2->fetch();
+        $nouv_tache = $req2->fetch(); // stockage de la tache ajoutée en variable
     
     } catch (PDOException $e) {
         http_response_code(500);
@@ -129,17 +131,19 @@ function creer_tache() {
     }
 
     http_response_code(201); // Code de réussite de creation
-    echo json_encode($nouv_tache);
+    echo json_encode($nouv_tache); // Sortie en json de la variable
 }
 
 function modifier_tache() {
     global $pdo;
 
     $id_user        = $_SESSION['user_id'];
-    $data           = json_decode(file_get_contents('php://input'), true); // Récupère la data 
+
+    // On récupère la data, la méthode PUT necessite cette fonction on ne peut pas faire comme pour GET ou POST
+    $data           = json_decode(file_get_contents('php://input'), true); 
     $id_tache       = $data['id'];
 
-    // Validation — l'id de la tâche est obligatoire
+    // Vérification : l'id de la tâche est obligatoire
     if (empty($id_tache)) {
         http_response_code(400);
         echo json_encode(['erreur' => 'ID de la tâche manquant']);
@@ -187,10 +191,10 @@ function modifier_tache() {
         exit;
     }
 
-    // On ajoute l'id en dernier paramètre pour le WHERE de la req
+    // On ajoute l'id en dernier paramètre pour le WHERE de la requête
     $params[] = $id_tache;
 
-    // implode sépare les champs avec une virgule : idéal pour la requête
+    // implode sépare les champs avec une virgule : idéal pour construire la requête
     $sql = 'UPDATE tasks SET ' . implode(', ', $champs) . ' WHERE id = ?';
 
     try {
@@ -216,11 +220,13 @@ function changer_statut() {
     global $pdo;
 
     $id_user        = $_SESSION['user_id'];
-    $data           = json_decode(file_get_contents('php://input'), true); // Récupère la data 
+
+    // On récupère la data, la méthode PUT necessite cette fonction on ne peut pas faire comme pour GET ou POST
+    $data           = json_decode(file_get_contents('php://input'), true); 
     $id_tache       = $data['id'];
     $statut         = $data['statut'];
 
-    // Validation : l'id et le statut de la tâche sont obligatoires
+    // Vérification : l'id et le statut de la tâche sont obligatoires
     if (empty($id_tache)) {
         http_response_code(400);
         echo json_encode(['erreur' => 'ID de la tâche manquant']);
@@ -267,10 +273,12 @@ function supprimer_tache() {
     global $pdo;
 
     $id_user        = $_SESSION['user_id'];
-    $data           = json_decode(file_get_contents('php://input'), true); // Récupère la data 
+
+    // On récupère la data, la méthode PUT necessite cette fonction on ne peut pas faire comme pour GET ou POST
+    $data           = json_decode(file_get_contents('php://input'), true);
     $id_tache       = $data['id'];
 
-    // Validation : l'id et le statut de la tâche sont obligatoires
+    // Vérification : l'id et le statut de la tâche sont obligatoires
     if (empty($id_tache)) {
         http_response_code(400);
         echo json_encode(['erreur' => 'ID de la tâche manquant']);
